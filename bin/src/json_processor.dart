@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 import 'extensions.dart';
+import 'color_gen/theme.dart';
+import 'color_gen/color.dart';
 
 class JsonProcessor {
   ///return map with 2 keys: light and dark. each key has a map of colors
   ///make sure name of theme keys is correct because they will be used as a class name
-  Map<String, dynamic> getColorsJson(File inputJsonFile) {
+  List<Theme> getThemes(File inputJsonFile) {
     final json =
         jsonDecode(inputJsonFile.readAsStringSync()) as Map<String, dynamic>;
 
@@ -29,7 +31,22 @@ class JsonProcessor {
       themedColors[element] = resolvedColors;
     }
 
-    return themedColors;
+    return themedColors.keys.map(
+      (key) {
+        final themeName = key;
+        final colors = themedColors[key] as Map<String, dynamic>;
+        return Theme(
+            themeName,
+            colors.keys
+                .map(
+                  (e) => Color(
+                    e,
+                    colors[e]!,
+                  ),
+                )
+                .toList());
+      },
+    ).toList();
   }
 
   ///colors might be nested like in example. this method resolves this.

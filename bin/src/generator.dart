@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'json_processor.dart';
-import 'color_file_generator.dart';
+import 'color_gen/color_file_generator.dart';
 
 class Generator {
   final String outputFilesDir;
@@ -17,8 +17,9 @@ class Generator {
 
     final jsonFile = File(inputJsonPath);
 
-    final colors = jsonProcessor.getColorsJson(jsonFile);
+    final colors = jsonProcessor.getThemes(jsonFile);
     final colorFileGenerator = ColorFileGenerator(colors, outputFilesDir);
+
     colorFileGenerator.generateColorExtensionFile();
     colorFileGenerator.generateColorsFile();
     colorFileGenerator.generateThemeImplementations();
