@@ -64,7 +64,11 @@ class ClassGenFunctions {
       (e) {
         final name = e.variableName;
         final color = e.colorHash;
-        return "static const Color $name = ${_hashColorToColor(color)};";
+        if (color.length > 7) {
+          return "static Color $name = ${_hashColorToColor(color)};";
+        } else {
+          return "static const Color $name = ${_hashColorToColor(color)};";
+        }
       },
     );
     return mapped.join('\n${numberOfTabs.tabs()}');
@@ -74,16 +78,18 @@ class ClassGenFunctions {
     String hexColor = hashColor.replaceFirst('#', '');
 
     if (hexColor.length > 6) {
-      hexColor = hexColor.substring(0, 6);
-    }
+      int alpha = int.parse(hashColor.substring(6, 8), radix: 16);
+      double opacity = (alpha / 255);
 
-    // Parse the hex string to an integer and create a Color
-    return "Color(0xFF${hexColor.toUpperCase()})";
+      hexColor = hexColor.substring(0, 6);
+      return "Color(0xFF$hexColor).withOpacity(${opacity.toStringAsFixed(2)})";
+    } else {
+      return "Color(0xFF$hexColor)";
+    }
   }
 
   static String getNamedConstructorImplementation(
-      Iterable<({String fieldName, String value})> values,
-      int numberOfTabs) {
+      Iterable<({String fieldName, String value})> values, int numberOfTabs) {
     final mapped = values.map(
       (e) {
         final name = e.fieldName;

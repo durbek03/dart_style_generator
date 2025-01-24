@@ -29,25 +29,20 @@ class ColorFileGenerator {
   }
 
   void generateColorsFile() {
-    themes.forEach(
-      (theme) {
-        final file =
-            File("$outputDirPath/color_themes/${theme.themeName}_colors.dart");
-        file.writeAsStringSync(
-            colorsFileTemplate(theme.themeName, theme.colors));
-      },
-    );
+    for (var theme in themes) {
+      final file =
+          File("$outputDirPath/color_themes/${theme.themeName}_colors.dart");
+      file.writeAsStringSync(colorsFileTemplate(theme.themeName, theme.colors));
+    }
   }
 
   void generateThemeImplementations() {
-    themes.forEach(
-      (theme) {
-        final file = File(
-            "$outputDirPath/extension_implementations/${theme.themeName}_theme.dart");
-        file.writeAsStringSync(themeImplementationTemplate(theme.themeName,
-            theme.colors, "../color_themes/${theme.themeName}_colors.dart"));
-      },
-    );
+    for (var theme in themes) {
+      final file = File(
+          "$outputDirPath/extension_implementations/${theme.themeName}_theme.dart");
+      file.writeAsStringSync(themeImplementationTemplate(theme.themeName,
+          theme.colors, "../color_themes/${theme.themeName}_colors.dart"));
+    }
   }
 
   String themeImplementationTemplate(
