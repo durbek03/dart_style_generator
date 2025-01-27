@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'extensions.dart';
 
 class ClassGenFunctions {
@@ -78,8 +80,9 @@ class ClassGenFunctions {
     String hexColor = hashColor.replaceFirst('#', '');
 
     if (hexColor.length > 6) {
-      int alpha = int.parse(hashColor.substring(6, 8), radix: 16);
+      int alpha = int.parse(hashColor.substring(6), radix: 16);
       double opacity = (alpha / 255);
+      opacity %= 1;
 
       hexColor = hexColor.substring(0, 6);
       return "Color(0xFF$hexColor).withOpacity(${opacity.toStringAsFixed(2)})";

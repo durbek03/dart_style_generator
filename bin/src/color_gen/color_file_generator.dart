@@ -1,6 +1,6 @@
 import 'dart:io';
-import '../class_gen_functions.dart';
-import '../extensions.dart';
+import '../utils/class_gen_functions.dart';
+import '../utils/extensions.dart';
 import 'theme.dart';
 import 'color.dart';
 
@@ -31,7 +31,7 @@ class ColorFileGenerator {
   void generateColorsFile() {
     for (var theme in themes) {
       final file =
-          File("$outputDirPath/color_themes/${theme.themeName}_colors.dart");
+          File("$outputDirPath/color_themes/${theme.themeName.fileNameFormat()}_colors.dart");
       file.writeAsStringSync(colorsFileTemplate(theme.themeName, theme.colors));
     }
   }
@@ -39,9 +39,9 @@ class ColorFileGenerator {
   void generateThemeImplementations() {
     for (var theme in themes) {
       final file = File(
-          "$outputDirPath/extension_implementations/${theme.themeName}_theme.dart");
+          "$outputDirPath/extension_implementations/${theme.themeName.fileNameFormat()}_theme.dart");
       file.writeAsStringSync(themeImplementationTemplate(theme.themeName,
-          theme.colors, "../color_themes/${theme.themeName}_colors.dart"));
+          theme.colors, "../color_themes/${theme.themeName.fileNameFormat()}_colors.dart"));
     }
   }
 

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'extensions.dart';
+import 'utils/extensions.dart';
 import 'color_gen/theme.dart';
 import 'color_gen/color.dart';
 
