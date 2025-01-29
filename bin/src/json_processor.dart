@@ -26,7 +26,7 @@ class JsonProcessor {
       ///example:      colors = {red: {shade1: #001, shade2: #002}, green: #00FF00, blue: #0000FF}
       final colors = json[element] as Map<String, dynamic>;
 
-      final resolvedColors = _flattenMap(colors).map(
+      final resolvedColors = _flattenColorMap(colors).map(
         (key, value) => MapEntry(key.firstLetterLower(), value),
       );
 
@@ -53,7 +53,7 @@ class JsonProcessor {
 
   ///colors might be nested like in example. this method resolves this.
   ///basically it makes nested map one flat map
-  Map<String, dynamic> _flattenMap(Map<String, dynamic> colorMap,
+  Map<String, dynamic> _flattenColorMap(Map<String, dynamic> colorMap,
       [String? prevKey]) {
     final colors = <String, dynamic>{};
     colorMap.forEach(
@@ -62,7 +62,7 @@ class JsonProcessor {
           colors[(prevKey ?? "").removeRedundantChars() +
               key.removeRedundantChars()] = value["value"];
         } else {
-          final newColorMap = _flattenMap(value, key);
+          final newColorMap = _flattenColorMap(value, key);
           colors.addAll(newColorMap);
         }
       },
@@ -70,13 +70,32 @@ class JsonProcessor {
     return colors;
   }
 
+  Map<String, dynamic> _extractStyles(Map<String, dynamic> typographyMap, [String? prevKey]) {
+    var styles = <String, dynamic>{};
+    typographyMap.forEach(
+      (key, value) {
+        if (value is Map<String, dynamic>) {
+          if (_isTypographyStyle(value)) {
+            styles[(prevKey ?? "").removeRedundantChars() + key.removeRedundantChars()] = value;
+          } else {
+            styles.addAll(_extractStyles(value, key));
+          }
+        } else {
+          return;
+        }
+      },
+    );
+    return styles;
+  }
+
   List<Typography> getTypography(File inputJsonFile) {
     final json =
         jsonDecode(inputJsonFile.readAsStringSync()) as Map<String, dynamic>;
 
-    final typography = json["global"] as Map<String, dynamic>;
+    var allStyles = json["Variables"] as Map<String, dynamic>;
     final mapped = <Typography>[];
 
+    final typography = _extractStyles(allStyles);
     typography.forEach(
       (key, value) {
         final isStyle = _isTypographyStyle(value);
@@ -90,7 +109,7 @@ class JsonProcessor {
               variablePath =
                   variablePath.replaceAll("{", "").replaceAll("}", "");
               final path = variablePath.split(".");
-              var mapBefore = typography;
+              var mapBefore = allStyles;
               for (int index = 0; index < path.length; index++) {
                 final value = path[index];
                 if (index == path.length - 1) {
@@ -122,6 +141,8 @@ class JsonProcessor {
               fontSize: fontSize,
               lineHeight: lineHeight,
               letterSpacing: letterSpacing));
+        } else {
+
         }
       },
     );
