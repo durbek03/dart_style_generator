@@ -148,7 +148,6 @@ class ClassGenFunctions {
       List<Typography> styles, Set<double> letterSpacing, int numberOfTabs) {
     final mapped = styles.map(
       (e) {
-        print("qwe height i ${e.lineHeight}");
         final name = e.name;
         return '''
   static TextStyle $name = TextStyle(

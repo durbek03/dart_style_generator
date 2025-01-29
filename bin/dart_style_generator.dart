@@ -33,6 +33,5 @@ void main(List<String> arguments) async {
       generator.generateTextStyles();
     }
   } catch (e, s) {
-    print("$e\n$s");
   }
 }
