@@ -18,7 +18,7 @@ class TextStyleFileGenerator {
     letterSpacings = typography.map((e) => e.letterSpacing).toSet();
     fontWeights = typography.map((e) => e.fontWeight).toSet();
 
-    final dir = Directory("/$_outputPath/text_styles");
+    final dir = Directory("$_outputPath/text_styles");
     _outputPath = dir.path;
     dir.createSync();
   }

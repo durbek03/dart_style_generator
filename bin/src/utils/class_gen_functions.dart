@@ -144,16 +144,18 @@ class ClassGenFunctions {
     }
   }
 
-  static String getTextStyleFields(List<Typography> styles, Set<double> letterSpacing, int numberOfTabs) {
+  static String getTextStyleFields(
+      List<Typography> styles, Set<double> letterSpacing, int numberOfTabs) {
     final mapped = styles.map(
       (e) {
+        print("qwe height i ${e.lineHeight}");
         final name = e.name;
         return '''
   static TextStyle $name = TextStyle(
     fontFamily: AppFontFamily.${e.fontFamily.fileNameFormat()},
     fontWeight: AppFontWeight.${e.fontWeight.toLowerCase()},
     fontSize: ${e.fontSize},
-    height: ${(e.lineHeight / e.fontSize).roundToDouble()},
+    height: ${(e.lineHeight / e.fontSize).toStringAsFixed(2)},
     letterSpacing: AppLetterSpacing.k${letterSpacing.toList().indexOf(e.letterSpacing)},
   );
         ''';
