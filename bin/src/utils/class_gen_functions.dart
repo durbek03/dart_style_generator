@@ -1,6 +1,5 @@
-import 'dart:developer';
-
 import 'extensions.dart';
+import '../text_style_gen/typography.dart';
 
 class ClassGenFunctions {
   static String getConstructorRequiredParameters(
@@ -102,5 +101,73 @@ class ClassGenFunctions {
     );
 
     return mapped.join('\n${numberOfTabs.tabs()}');
+  }
+
+  static String getFontFamilies(Set<String> fontFamilies, int numberOfTabs) {
+    final mapped = fontFamilies.map(
+      (e) {
+        return "static String? ${e.fileNameFormat()} = Platform.isIOS ? '$e' : null;";
+      },
+    );
+    return mapped.join('\n${numberOfTabs.tabs()}');
+  }
+
+  static String getFontWeights(Set<String> fontWeights, int numberOfTabs) {
+    final mapped = fontWeights.map(
+      (e) {
+        return "static const FontWeight ${e.toLowerCase()} = ${parseWeight(e)};";
+      },
+    );
+    return mapped.join('\n${numberOfTabs.tabs()}');
+  }
+
+  static String parseWeight(String weight) {
+    switch (weight) {
+      case "Ultralight":
+        return "FontWeight.w100";
+      case "Thin":
+        return "FontWeight.w200";
+      case "Light":
+        return "FontWeight.w300";
+      case "Regular":
+        return "FontWeight.w400";
+      case "Medium":
+        return "FontWeight.w500";
+      case "Semibold":
+        return "FontWeight.w600";
+      case "Bold":
+        return "FontWeight.w700";
+      case "Heavy":
+        return "FontWeight.w800";
+      default:
+        return "FontWeight.w400";
+    }
+  }
+
+  static String getTextStyleFields(List<Typography> styles, Set<double> letterSpacing, int numberOfTabs) {
+    final mapped = styles.map(
+      (e) {
+        final name = e.name;
+        return '''
+  static TextStyle $name = TextStyle(
+    fontFamily: AppFontFamily.${e.fontFamily.fileNameFormat()},
+    fontWeight: AppFontWeight.${e.fontWeight.toLowerCase()},
+    fontSize: ${e.fontSize},
+    height: ${(e.lineHeight / e.fontSize).roundToDouble()},
+    letterSpacing: AppLetterSpacing.k${letterSpacing.toList().indexOf(e.letterSpacing)},
+  );
+        ''';
+      },
+    );
+    return mapped.join('\n${numberOfTabs.tabs()}');
+  }
+
+  static getLetterSpacings(Set<double> letterSpacings, int i) {
+    final mapped = letterSpacings.map(
+      (e) {
+        return "static const double k${letterSpacings.toList().indexOf(e)} = $e;";
+      },
+    );
+    return mapped.join('\n${i.tabs()}');
   }
 }

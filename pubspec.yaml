@@ -1,6 +1,6 @@
 name: dart_style_generator
 description: Command line application for generating, colors and text styles from a JSON file
-version: 0.0.1
+version: 0.0.1-alpha
 # repository: https://github.com/my_org/my_repo
 
 environment:

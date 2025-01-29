@@ -29,7 +29,9 @@ void main(List<String> arguments) async {
     final generator = Generator(outputDirPath, inputJsonFilePath);
     if (commandName == 'generate-color') {
       generator.generateColors();
-    } else if (commandName == 'generate-text') {}
+    } else if (commandName == 'generate-text') {
+      generator.generateTextStyles();
+    }
   } catch (e, s) {
     print("$e\n$s");
   }

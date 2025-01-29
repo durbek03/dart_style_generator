@@ -3,6 +3,8 @@ import 'dart:io';
 import 'utils/extensions.dart';
 import 'color_gen/theme.dart';
 import 'color_gen/color.dart';
+import 'text_style_gen/typography.dart';
+import 'text_style_gen/font_family.dart';
 
 class JsonProcessor {
   ///return map with 2 keys: light and dark. each key has a map of colors
@@ -66,5 +68,71 @@ class JsonProcessor {
       },
     );
     return colors;
+  }
+
+  List<Typography> getTypography(File inputJsonFile) {
+    final json =
+        jsonDecode(inputJsonFile.readAsStringSync()) as Map<String, dynamic>;
+
+    final typography = json["global"] as Map<String, dynamic>;
+    final mapped = <Typography>[];
+
+    typography.forEach(
+      (key, value) {
+        final isStyle = _isTypographyStyle(value);
+        final reducedMap = <String, dynamic>{};
+        if (isStyle) {
+          value as Map<String, dynamic>;
+          value.forEach(
+            (key, value) {
+              var variablePath = value["value"] as String;
+              //remove {}
+              variablePath =
+                  variablePath.replaceAll("{", "").replaceAll("}", "");
+              final path = variablePath.split(".");
+              var mapBefore = typography;
+              for (int index = 0; index < path.length; index++) {
+                final value = path[index];
+                if (index == path.length - 1) {
+                  reducedMap[key] = mapBefore[value]['value'];
+                } else {
+                  mapBefore = mapBefore[path[index]];
+                }
+              }
+            },
+          );
+
+          final name = key.fileNameFormat();
+          final fontFamily = reducedMap["fontFamily"];
+          final fontWeight = reducedMap["fontWeight"];
+          final fontSize = double.tryParse(reducedMap["fontSize"]);
+          final lineHeight = double.tryParse(reducedMap["lineHeight"]);
+          final letterSpacing = double.tryParse(
+              (reducedMap["letterSpacing"] as String).replaceAll("%", ''));
+
+          if (fontSize == null || lineHeight == null || letterSpacing == null) {
+            throw Exception(
+                "Font size, line height or letter spacing is null. Something went wrong");
+          }
+
+          mapped.add(Typography(
+              name: name,
+              fontFamily: fontFamily,
+              fontWeight: fontWeight,
+              fontSize: fontSize,
+              lineHeight: lineHeight,
+              letterSpacing: letterSpacing));
+        }
+      },
+    );
+    return mapped;
+  }
+
+  _isTypographyStyle(Map<String, dynamic> map) {
+    return map.containsKey("fontSize") &&
+        map.containsKey("lineHeight") &&
+        map.containsKey("letterSpacing") &&
+        map.containsKey("fontFamily") &&
+        map.containsKey("fontWeight");
   }
 }

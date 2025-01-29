@@ -9,17 +9,10 @@ class ColorFileGenerator {
   String outputDirPath;
 
   ColorFileGenerator(this.themes, this.outputDirPath) {
-    final colorExtensionsFir = Directory("$outputDirPath/color_extensions");
-    colorExtensionsFir.createSync();
-    final colorThemesDir = Directory("$outputDirPath/color_themes");
-    colorThemesDir.createSync();
-    final extensionImplementationsDir =
-        Directory("$outputDirPath/extension_implementations");
-    extensionImplementationsDir.createSync();
-
     if (outputDirPath[outputDirPath.length - 1] == "/") {
       outputDirPath = outputDirPath.substring(0, outputDirPath.length - 1);
     }
+    createDirs();
   }
 
   void generateColorExtensionFile() async {
@@ -30,8 +23,8 @@ class ColorFileGenerator {
 
   void generateColorsFile() {
     for (var theme in themes) {
-      final file =
-          File("$outputDirPath/color_themes/${theme.themeName.fileNameFormat()}_colors.dart");
+      final file = File(
+          "$outputDirPath/color_themes/${theme.themeName.fileNameFormat()}_colors.dart");
       file.writeAsStringSync(colorsFileTemplate(theme.themeName, theme.colors));
     }
   }
@@ -40,8 +33,10 @@ class ColorFileGenerator {
     for (var theme in themes) {
       final file = File(
           "$outputDirPath/extension_implementations/${theme.themeName.fileNameFormat()}_theme.dart");
-      file.writeAsStringSync(themeImplementationTemplate(theme.themeName,
-          theme.colors, "../color_themes/${theme.themeName.fileNameFormat()}_colors.dart"));
+      file.writeAsStringSync(themeImplementationTemplate(
+          theme.themeName,
+          theme.colors,
+          "../color_themes/${theme.themeName.fileNameFormat()}_colors.dart"));
     }
   }
 
@@ -125,5 +120,18 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
   }
 }
     ''';
+  }
+
+  void createDirs() async {
+    outputDirPath = "$outputDirPath/theme_colors";
+    final parentDir = Directory(outputDirPath);
+    parentDir.createSync();
+    final colorExtensionsFir = Directory("$outputDirPath/color_extensions");
+    colorExtensionsFir.createSync();
+    final colorThemesDir = Directory("$outputDirPath/color_themes");
+    colorThemesDir.createSync();
+    final extensionImplementationsDir =
+        Directory("$outputDirPath/extension_implementations");
+    extensionImplementationsDir.createSync();
   }
 }
