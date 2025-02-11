@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'utils/extensions.dart';
 import 'color_gen/theme.dart';
@@ -70,58 +71,23 @@ class JsonProcessor {
     return colors;
   }
 
-  Map<String, dynamic> _extractStyles(Map<String, dynamic> typographyMap, [String? prevKey]) {
-    var styles = <String, dynamic>{};
-    typographyMap.forEach(
-      (key, value) {
-        if (value is Map<String, dynamic>) {
-          if (_isTypographyStyle(value)) {
-            styles[(prevKey ?? "").removeRedundantChars() + key.removeRedundantChars()] = value;
-          } else {
-            styles.addAll(_extractStyles(value, key));
-          }
-        } else {
-          return;
-        }
-      },
-    );
-    return styles;
-  }
-
   List<Typography> getTypography(File inputJsonFile) {
     final json =
         jsonDecode(inputJsonFile.readAsStringSync()) as Map<String, dynamic>;
 
     var allStyles = json["Variables"] as Map<String, dynamic>;
+
     final mapped = <Typography>[];
 
-    final typography = _extractStyles(allStyles);
-    typography.forEach(
+    allStyles.forEach(
       (key, value) {
-        final isStyle = _isTypographyStyle(value);
-        final reducedMap = <String, dynamic>{};
-        if (isStyle) {
-          value as Map<String, dynamic>;
-          value.forEach(
-            (key, value) {
-              var variablePath = value["value"] as String;
-              //remove {}
-              variablePath =
-                  variablePath.replaceAll("{", "").replaceAll("}", "");
-              final path = variablePath.split(".");
-              var mapBefore = allStyles;
-              for (int index = 0; index < path.length; index++) {
-                final value = path[index];
-                if (index == path.length - 1) {
-                  reducedMap[key] = mapBefore[value]['value'];
-                } else {
-                  mapBefore = mapBefore[path[index]];
-                }
-              }
-            },
-          );
+        final isTypography = _isTypographyStyle(value);
+        if (isTypography) {
+          final typography = flattenNestedTypography({key: value});
 
-          final name = key.fileNameFormat();
+          final withValues = setValuesForPath(typography, allStyles);
+
+          final reducedMap = withValues.values.first;
           final fontFamily = reducedMap["fontFamily"];
           final fontWeight = reducedMap["fontWeight"];
           final fontSize = double.tryParse(reducedMap["fontSize"]);
@@ -129,31 +95,119 @@ class JsonProcessor {
           final letterSpacing = double.tryParse(
               (reducedMap["letterSpacing"] as String).replaceAll("%", ''));
 
+          print("qwe fontweight $fontWeight");
+
           if (fontSize == null || lineHeight == null || letterSpacing == null) {
             throw Exception(
                 "Font size, line height or letter spacing is null. Something went wrong");
           }
 
           mapped.add(Typography(
-              name: name,
+              name: withValues.keys.first,
               fontFamily: fontFamily,
               fontWeight: fontWeight,
               fontSize: fontSize,
               lineHeight: lineHeight,
               letterSpacing: letterSpacing));
-        } else {
-
         }
       },
     );
+
     return mapped;
   }
 
-  _isTypographyStyle(Map<String, dynamic> map) {
-    return map.containsKey("fontSize") &&
-        map.containsKey("lineHeight") &&
-        map.containsKey("letterSpacing") &&
-        map.containsKey("fontFamily") &&
-        map.containsKey("fontWeight");
+  Map<String, dynamic> setValuesForPath(
+      Map<String, dynamic> typography, Map<String, dynamic> allStyles) {
+    final map = {};
+    final name = typography.keys.first;
+    final attributes = typography.values.first as Map;
+    attributes.forEach(
+      (key, value) {
+        final _value = getValue(value);
+        final resolvedValue = _getValueFromPath(_value, allStyles);
+        map[key] = resolvedValue;
+      },
+    );
+    return {name: map};
+  }
+
+  dynamic _getValueFromPath(String value, Map<String, dynamic> allStyles) {
+    final path = (value.replaceAll("{", "").replaceAll("}", "")).split(".");
+    late dynamic attribute;
+    var prevValue = {};
+
+    for (int i = 0; i < path.length; i++) {
+      if (i == path.length - 1) {
+        attribute = getValue(prevValue[path[i]]);
+      } else {
+        prevValue = allStyles[path[i]];
+      }
+    }
+    return attribute;
+  }
+
+  Map<String, dynamic> flattenNestedTypography(Map<String, dynamic> values,
+      [String prevKey = ""]) {
+    final typography = <String, dynamic>{};
+
+    values.forEach(
+      (key, value) {
+        final isTypography = typographyIsCurrentLevel(value);
+        final currentKey = key == "value" ? "" : key;
+        final _prevKey = prevKey.isEmpty ? "" : "${prevKey}_";
+        if (isTypography) {
+          typography[prevKey + currentKey] = value;
+        } else {
+          if (value is Map<String, dynamic>) {
+            typography.addAll(flattenNestedTypography(
+                value, _prevKey + currentKey.fileNameFormat()));
+          }
+        }
+      },
+    );
+    return typography;
+  }
+
+  dynamic getValue(dynamic value) {
+    if (value is Map<String, dynamic>) {
+      return value["value"];
+    } else {
+      return value;
+    }
+  }
+
+  bool typographyIsCurrentLevel(dynamic value) {
+    if (value is Map) {
+      if (value.containsKey("fontFamily") &&
+          value.containsKey("fontSize") &&
+          value.containsKey("fontWeight") &&
+          value.containsKey("letterSpacing")) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  bool _isTypographyStyle(dynamic value) {
+    if (value is Map) {
+      value as Map<String, dynamic>;
+      if (value.containsKey("fontFamily") &&
+          value.containsKey("fontSize") &&
+          value.containsKey("fontWeight") &&
+          value.containsKey("letterSpacing")) {
+        return true;
+      } else {
+        if (value.values.isNotEmpty) {
+          return _isTypographyStyle(value.values.first);
+        } else {
+          return false;
+        }
+      }
+    } else {
+      return false;
+    }
   }
 }
