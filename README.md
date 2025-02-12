@@ -6,6 +6,23 @@ https://www.figma.com/community/plugin/843461159747178978/tokens-studio-for-figm
 `dart run dart_style_generator generate-color -i 'path to json file with colors' -o 'directory path where files should be
 generated'`
 
+After generating classes, you should include created extension classes in you ThemeData class.
+
+```
+ThemeData.light(
+    extensions: [lightThemeExtension],
+)
+```
+
+To easily access theme extension you can write an extension for BuildContext.
+
+```
+extension ThemeExtension on BuildContext {
+    AppColorsExtension get appColors =>
+      Theme.of(this).extension<AppColorsExtension>() ?? lightThemeExtension;
+}
+```
+
 **Expected json file format for colors:**
 
 ```
